@@ -6,6 +6,20 @@ import sys
 import math
 import os    
 import ctypes 
+import sys
+
+
+# [新增] 資源路徑處理函式 (這是打包 exe 的關鍵！)
+def resource_path(relative_path):
+    """取得資源的絕對路徑，用於 PyInstaller 打包"""
+    try:
+        # PyInstaller 會建立一個 _MEIPASS 臨時資料夾，存放資源
+        base_path = sys._MEIPASS
+    except Exception:
+        # 如果是正常執行 (沒打包)，就使用當前目錄
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # --- 0. 系統與視窗設定 ---
 try:
@@ -66,14 +80,25 @@ MUTE_BTN_RECT = pygame.Rect(SCREEN_WIDTH - MUTE_BTN_SIZE - 20, 20, MUTE_BTN_SIZE
 # --- 2. 資源載入與處理 ---
 
 try:
-    drop_sound = pygame.mixer.Sound('DROP.wav') 
-    merge_sound = pygame.mixer.Sound('COLLISION.wav')
+    # [修改] 使用 resource_path 包覆檔名
+    drop_sound = pygame.mixer.Sound(resource_path('DROP.wav')) 
+    merge_sound = pygame.mixer.Sound(resource_path('COLLISION.wav'))
 except (pygame.error, FileNotFoundError) as e:
     print(f"警告：無法載入音效檔案。 {e}")
     class DummySound:
         def play(self): pass
     drop_sound = DummySound()
     merge_sound = DummySound()
+
+# try:
+#     drop_sound = pygame.mixer.Sound('DROP.wav') 
+#     merge_sound = pygame.mixer.Sound('COLLISION.wav')
+# except (pygame.error, FileNotFoundError) as e:
+#     print(f"警告：無法載入音效檔案。 {e}")
+#     class DummySound:
+#         def play(self): pass
+#     drop_sound = DummySound()
+#     merge_sound = DummySound()
 
 def create_starry_background(width, height):
     bg = pygame.Surface((width, height))
@@ -111,8 +136,10 @@ def crop_to_circle(image):
 PLANET_IMAGES = [None] 
 for i in range(1, 11): 
     try:
-        img_path = os.path.join('assets', f'planet_{i}.png') 
-        original_image = pygame.image.load(img_path).convert_alpha() 
+        # img_path = os.path.join('assets', f'planet_{i}.png') 
+        img_path = resource_path(os.path.join('assets', f'planet_{i}.png'))
+        # original_image = pygame.image.load(img_path).convert_alpha()
+        original_image = pygame.image.load(img_path).convert_alpha()
         target_size = (PLANET_RADII[i]*2, PLANET_RADII[i]*2)
         scaled_image = pygame.transform.scale(original_image, target_size)
         final_image = crop_to_circle(scaled_image)
