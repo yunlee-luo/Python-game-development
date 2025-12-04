@@ -6,10 +6,8 @@ import sys
 import math
 import os    
 import ctypes 
-import sys
 
-
-# [新增] 資源路徑處理函式 (這是打包 exe 的關鍵！)
+# [新增] 資源路徑處理函式 (這是打包 EXE 必備的！)
 def resource_path(relative_path):
     """取得資源的絕對路徑，用於 PyInstaller 打包"""
     try:
@@ -80,7 +78,7 @@ MUTE_BTN_RECT = pygame.Rect(SCREEN_WIDTH - MUTE_BTN_SIZE - 20, 20, MUTE_BTN_SIZE
 # --- 2. 資源載入與處理 ---
 
 try:
-    # [修改] 使用 resource_path 包覆檔名
+    # [重要修改] 使用 resource_path 包覆檔名
     drop_sound = pygame.mixer.Sound(resource_path('DROP.wav')) 
     merge_sound = pygame.mixer.Sound(resource_path('COLLISION.wav'))
 except (pygame.error, FileNotFoundError) as e:
@@ -89,16 +87,6 @@ except (pygame.error, FileNotFoundError) as e:
         def play(self): pass
     drop_sound = DummySound()
     merge_sound = DummySound()
-
-# try:
-#     drop_sound = pygame.mixer.Sound('DROP.wav') 
-#     merge_sound = pygame.mixer.Sound('COLLISION.wav')
-# except (pygame.error, FileNotFoundError) as e:
-#     print(f"警告：無法載入音效檔案。 {e}")
-#     class DummySound:
-#         def play(self): pass
-#     drop_sound = DummySound()
-#     merge_sound = DummySound()
 
 def create_starry_background(width, height):
     bg = pygame.Surface((width, height))
@@ -136,10 +124,10 @@ def crop_to_circle(image):
 PLANET_IMAGES = [None] 
 for i in range(1, 11): 
     try:
-        # img_path = os.path.join('assets', f'planet_{i}.png') 
+        # [重要修改] 使用 resource_path 包覆路徑
         img_path = resource_path(os.path.join('assets', f'planet_{i}.png'))
-        # original_image = pygame.image.load(img_path).convert_alpha()
-        original_image = pygame.image.load(img_path).convert_alpha()
+        
+        original_image = pygame.image.load(img_path).convert_alpha() 
         target_size = (PLANET_RADII[i]*2, PLANET_RADII[i]*2)
         scaled_image = pygame.transform.scale(original_image, target_size)
         final_image = crop_to_circle(scaled_image)
@@ -221,24 +209,14 @@ class Planet:
         pos = self.body.position
         x, y = int(pos.x), int(pos.y)
         
-        # [修改] 圖片繪製邏輯：加入旋轉
         original_image = PLANET_IMAGES[self.level]
         
         if original_image:
-            # 1. 取得 Pymunk 計算的旋轉角度 (弧度 -> 角度)
-            # 負號是因為 Pygame 的旋轉方向與 Pymunk 相反
             angle_degrees = -math.degrees(self.body.angle)
-            
-            # 2. 旋轉圖片
             rotated_image = pygame.transform.rotate(original_image, angle_degrees)
-            
-            # 3. 重新計算中心點 (因為旋轉後圖片外框會變大，必須重新對齊中心)
             image_rect = rotated_image.get_rect(center=(x, y))
-            
-            # 4. 繪製
             screen.blit(rotated_image, image_rect)
         else:
-            # 備用純色圓形
             color = PLANET_COLORS[self.level]
             pygame.draw.circle(screen, color, (x, y), int(self.radius))
 

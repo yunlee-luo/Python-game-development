@@ -1,1 +1,4 @@
 .venv
+build/
+dist/
+合成大星瓜.spec
