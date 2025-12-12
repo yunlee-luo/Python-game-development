@@ -7,14 +7,12 @@ import math
 import os    
 import ctypes 
 
-# [新增] 資源路徑處理函式 (這是打包 EXE 必備的！)
+
 def resource_path(relative_path):
     """取得資源的絕對路徑，用於 PyInstaller 打包"""
     try:
-        # PyInstaller 會建立一個 _MEIPASS 臨時資料夾，存放資源
         base_path = sys._MEIPASS
     except Exception:
-        # 如果是正常執行 (沒打包)，就使用當前目錄
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
@@ -78,7 +76,6 @@ MUTE_BTN_RECT = pygame.Rect(SCREEN_WIDTH - MUTE_BTN_SIZE - 20, 20, MUTE_BTN_SIZE
 # --- 2. 資源載入與處理 ---
 
 try:
-    # [重要修改] 使用 resource_path 包覆檔名
     drop_sound = pygame.mixer.Sound(resource_path('DROP.wav')) 
     merge_sound = pygame.mixer.Sound(resource_path('COLLISION.wav'))
 except (pygame.error, FileNotFoundError) as e:
@@ -124,7 +121,6 @@ def crop_to_circle(image):
 PLANET_IMAGES = [None] 
 for i in range(1, 11): 
     try:
-        # [重要修改] 使用 resource_path 包覆路徑
         img_path = resource_path(os.path.join('assets', f'planet_{i}.png'))
         
         original_image = pygame.image.load(img_path).convert_alpha() 
